@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Project999</string>
+    <string name="hello_world">Hello world</string>
+    <string name="playing">Playing</string>
+    <string name="play">Play</string>
+    <string name="subscribe">Subscribe</string>
+    <string name="subscribed">Successfully Subscribed!</string>
+
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Project999</string>
+    <string name="hello_world">Привет мир</string>
+    <string name="playing">Воспроизводится</string>
+    <string name="play">Воспроизвести</string>
+    <string name="subscribe">Подписаться</string>
+    <string name="subscribed">Успешно подписаны!</string>
+
+</resources>
