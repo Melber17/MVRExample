@@ -59,13 +59,148 @@ class SubscriptionRepresentativeTest {
         representative.startGettingUpdates(callback)
         observable.checkUpdateObserverCalled(callback)
 
+        representative.subscribe()
+        observable.checkUiState(SubscriptionUiState.Loading)
+        interactor.checkSubscribeCalledTimes(1)
+
+        interactor.pingCallback()
+        observable.checkUiState(SubscriptionUiState.Success)
+
+        representative.observed()
+        observable.checkClearCalled()
+
         representative.finish()
         clear.checkClearCalledWith(SubscriptionRepresentative::class.java)
         navigation.checkUpdated(DashboardScreen)
+
         representative.stopGettingUpdates()
         observable.checkUpdateObserverCalled(EmptySubscriptionObserver)
-
     }
+
+    @Test
+    fun test_save_and_restore() {
+        val restoreState = FakeSaveAndRestore.Base()
+        representative.init(restoreState)
+        handleDeath.checkFirstOpening(1)
+        observable.checkUiState(SubscriptionUiState.Initial)
+        observable.checkUpdateCalledCount(1)
+
+        val callback = object : SubscriptionObserver {
+            override fun update(data: SubscriptionUiState) = Unit
+        }
+
+        representative.startGettingUpdates(callback)
+        observable.checkUpdateObserverCalled(callback)
+
+        representative.stopGettingUpdates()
+        observable.checkUpdateObserverCalled(EmptySubscriptionObserver)
+        representative.save(restoreState)
+
+        representative.init(restoreState)
+        handleDeath.checkFirstOpening(1)
+        observable.checkUpdateCalledCount(2)
+    }
+
+    @Test
+    fun test_death_after_loading() {
+        val restoreState = FakeSaveAndRestore.Base()
+        representative.init(restoreState)
+        handleDeath.checkFirstOpening(1)
+        observable.checkUiState(SubscriptionUiState.Initial)
+
+        val callback = object : SubscriptionObserver {
+            override fun update(data: SubscriptionUiState) = Unit
+        }
+
+        representative.startGettingUpdates(callback)
+        observable.checkUpdateObserverCalled(callback)
+
+        representative.subscribe()
+        observable.checkUiState(SubscriptionUiState.Loading)
+        interactor.checkSubscribeCalledTimes(1)
+        representative.stopGettingUpdates()
+        observable.checkUpdateObserverCalled(EmptySubscriptionObserver)
+        representative.save(restoreState)
+
+
+        // death happening here
+        setup()
+
+        representative.init(restoreState)
+        handleDeath.checkFirstOpening(0)
+        observable.checkUiState(SubscriptionUiState.Empty)
+        observable.checkUpdateCalledCount(0)
+        interactor.checkSubscribeCalledTimes(1)
+    }
+
+    @Test
+    fun test_death_after_success() {
+        val restoreState = FakeSaveAndRestore.Base()
+        representative.init(restoreState)
+        handleDeath.checkFirstOpening(1)
+        observable.checkUiState(SubscriptionUiState.Initial)
+
+        val callback = object : SubscriptionObserver {
+            override fun update(data: SubscriptionUiState) = Unit
+        }
+
+        representative.startGettingUpdates(callback)
+        observable.checkUpdateObserverCalled(callback)
+
+        representative.subscribe()
+        observable.checkUiState(SubscriptionUiState.Loading)
+        interactor.checkSubscribeCalledTimes(1)
+        interactor.pingCallback()
+        observable.checkUiState(SubscriptionUiState.Success)
+        representative.stopGettingUpdates()
+        observable.checkUpdateObserverCalled(EmptySubscriptionObserver)
+        representative.save(restoreState)
+
+
+        setup()
+
+        representative.init(restoreState)
+        handleDeath.checkFirstOpening(0)
+        observable.checkUiState(SubscriptionUiState.Success)
+        observable.checkUpdateCalledCount(1)
+        interactor.checkSubscribeCalledTimes(0)
+    }
+
+    @Test
+    fun test_death_after_success_observed() {
+        val restoreState = FakeSaveAndRestore.Base()
+        representative.init(restoreState)
+        handleDeath.checkFirstOpening(1)
+        observable.checkUiState(SubscriptionUiState.Initial)
+
+        val callback = object : SubscriptionObserver {
+            override fun update(data: SubscriptionUiState) = Unit
+        }
+
+        representative.startGettingUpdates(callback)
+        observable.checkUpdateObserverCalled(callback)
+
+        representative.subscribe()
+        observable.checkUiState(SubscriptionUiState.Loading)
+        interactor.checkSubscribeCalledTimes(1)
+        interactor.pingCallback()
+        observable.checkUiState(SubscriptionUiState.Success)
+        representative.observed()
+        observable.checkClearCalled()
+        representative.stopGettingUpdates()
+        observable.checkUpdateObserverCalled(EmptySubscriptionObserver)
+        representative.save(restoreState)
+
+
+        // death happening here
+        setup()
+        representative.init(restoreState)
+        handleDeath.checkFirstOpening(0)
+        observable.checkUiState(SubscriptionUiState.Empty)
+        observable.checkUpdateCalledCount(0)
+        interactor.checkSubscribeCalledTimes(0)
+    }
+
 }
 
 private interface FakeSaveAndRestore : SaveAndRestoreSubscriptionUiState.Mutable {
@@ -102,15 +237,23 @@ private interface FakeNavigation : Navigation.Update {
 
 private interface FakeInteractor : SubscriptionInteractor {
     fun pingCallback()
+    fun checkSubscribeCalledTimes(times: Int)
 
 
     class Base() : FakeInteractor {
         private var cachedCallback = {}
         override fun pingCallback() {
             cachedCallback.invoke()
+
+        }
+
+        private var subscribeCalledCount = 0
+        override fun checkSubscribeCalledTimes(times: Int) {
+            assertEquals(times, subscribeCalledCount)
         }
 
         override fun subscribe(callback: () -> Unit) {
+            subscribeCalledCount++
             cachedCallback = callback
         }
 
@@ -135,6 +278,7 @@ private interface FakeClear : ClearRepresentative {
 
 private interface FakeObservable : SubscriptionObservable {
     fun checkClearCalled()
+    fun checkUpdateCalledCount(times: Int)
     fun checkUiState(uiState: SubscriptionUiState)
     fun checkUpdateObserverCalled(observer: SubscriptionObserver)
 
@@ -142,9 +286,15 @@ private interface FakeObservable : SubscriptionObservable {
     class Base : FakeObservable {
         private var clearCalled = false
         private var cache: SubscriptionUiState = SubscriptionUiState.Empty
+        private var updateCalledCount = 0
 
         override fun checkClearCalled() {
             assertEquals(true, clearCalled)
+            clearCalled = false
+        }
+
+        override fun checkUpdateCalledCount(times: Int) {
+            assertEquals(times, updateCalledCount)
         }
 
 
@@ -156,6 +306,7 @@ private interface FakeObservable : SubscriptionObservable {
 
         override fun update(data: SubscriptionUiState) {
             cache = data
+            updateCalledCount++;
         }
 
         override fun checkUiState(uiState: SubscriptionUiState) {
@@ -166,9 +317,10 @@ private interface FakeObservable : SubscriptionObservable {
             assertEquals(observerCached, observer)
         }
 
-        private var observerCached: UiObserver<SubscriptionUiState> = object : SubscriptionObserver {
-            override fun update(data: SubscriptionUiState) = Unit
-        }
+        private var observerCached: UiObserver<SubscriptionUiState> =
+            object : SubscriptionObserver {
+                override fun update(data: SubscriptionUiState) = Unit
+            }
 
         override fun updateObserver(uiObserver: UiObserver<SubscriptionUiState>) {
             observerCached = uiObserver
