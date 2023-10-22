@@ -24,7 +24,7 @@ interface DashboardRepresentative : Representative<PremiumDashboardUiState> {
             observable.updateObserver(callback)
 
         override fun stopGettingUpdates() {
-            observable.updateObserver()
+            observable.updateObserver(EmptyDashboardObserver)
         }
 
     }
@@ -37,4 +37,8 @@ interface DashboardRepresentative : Representative<PremiumDashboardUiState> {
             navigation.update(SubscriptionScreen)
         }
     }
+}
+
+object EmptyDashboardObserver: DashboardObserver {
+    override fun update(data: PremiumDashboardUiState) = Unit
 }
