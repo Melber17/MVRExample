@@ -3,6 +3,7 @@ package com.melber17.project999.subscription
 import com.melber17.project999.core.ClearRepresentative
 import com.melber17.project999.core.HandleDeath
 import com.melber17.project999.core.Representative
+import com.melber17.project999.core.RunAsync
 import com.melber17.project999.core.UiObserver
 import com.melber17.project999.dashboard.DashboardScreen
 import com.melber17.project999.main.Navigation
@@ -14,6 +15,8 @@ import com.melber17.project999.subscription.presentation.SubscriptionObservable
 import com.melber17.project999.subscription.presentation.SubscriptionObserver
 import com.melber17.project999.subscription.presentation.SubscriptionRepresentative
 import com.melber17.project999.subscription.presentation.SubscriptionUiState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -26,6 +29,7 @@ class SubscriptionRepresentativeTest {
     private lateinit var interactor: FakeInteractor
     private lateinit var navigation: FakeNavigation
     private lateinit var handleDeath: FakeHandleDeath
+    private lateinit var runAsync: FakeRunAsync
 
     @Before
     fun setup() {
@@ -34,6 +38,7 @@ class SubscriptionRepresentativeTest {
         interactor = FakeInteractor.Base()
         navigation = FakeNavigation.Base()
         handleDeath = FakeHandleDeath.Base()
+        runAsync = FakeRunAsync.Base()
 
         representative = SubscriptionRepresentative.Base(
             handleDeath,
@@ -41,6 +46,7 @@ class SubscriptionRepresentativeTest {
             clear,
             interactor,
             navigation,
+            runAsync,
         )
 
     }
@@ -63,7 +69,7 @@ class SubscriptionRepresentativeTest {
         observable.checkUiState(SubscriptionUiState.Loading)
         interactor.checkSubscribeCalledTimes(1)
 
-        interactor.pingCallback()
+        runAsync.pingResult()
         observable.checkUiState(SubscriptionUiState.Success)
 
         representative.observed()
@@ -150,7 +156,7 @@ class SubscriptionRepresentativeTest {
         representative.subscribe()
         observable.checkUiState(SubscriptionUiState.Loading)
         interactor.checkSubscribeCalledTimes(1)
-        interactor.pingCallback()
+        runAsync.pingResult()
         observable.checkUiState(SubscriptionUiState.Success)
         representative.stopGettingUpdates()
         observable.checkUpdateObserverCalled(EmptySubscriptionObserver)
@@ -183,7 +189,7 @@ class SubscriptionRepresentativeTest {
         representative.subscribe()
         observable.checkUiState(SubscriptionUiState.Loading)
         interactor.checkSubscribeCalledTimes(1)
-        interactor.pingCallback()
+        runAsync.pingResult()
         observable.checkUiState(SubscriptionUiState.Success)
         representative.observed()
         observable.checkClearCalled()
@@ -236,26 +242,41 @@ private interface FakeNavigation : Navigation.Update {
 
 
 private interface FakeInteractor : SubscriptionInteractor {
-    fun pingCallback()
     fun checkSubscribeCalledTimes(times: Int)
 
 
     class Base() : FakeInteractor {
-        private var cachedCallback = {}
-        override fun pingCallback() {
-            cachedCallback.invoke()
-
-        }
-
         private var subscribeCalledCount = 0
         override fun checkSubscribeCalledTimes(times: Int) {
             assertEquals(times, subscribeCalledCount)
         }
 
-        override fun subscribe(callback: () -> Unit) {
+        override suspend fun subscribe() {
             subscribeCalledCount++
-            cachedCallback = callback
         }
+
+    }
+}
+
+private interface FakeRunAsync : RunAsync {
+    fun pingResult()
+    class Base : FakeRunAsync {
+        private var cachedBlock: (Any) -> Unit = {}
+        private var cached: Any = Unit
+        override fun pingResult() {
+            cachedBlock.invoke(cached)
+        }
+
+        override fun <T : Any> runAsync(
+            scope: CoroutineScope,
+            backgroundBlock: suspend () -> T,
+            uiBlock: (T) -> Unit
+        ) = runBlocking {
+            cached = backgroundBlock.invoke()
+            cachedBlock = uiBlock as (Any) -> Unit
+        }
+
+        override fun clear() = Unit
 
     }
 }

@@ -1,19 +1,16 @@
 package com.melber17.project999.subscription.domain
 
-import com.melber17.project999.main.UserPremiumCache
+import kotlinx.coroutines.delay
 
 interface SubscriptionInteractor {
-    fun subscribe(callback: () -> Unit)
+    suspend fun subscribe()
     class Base(
-        private val userPremiumCache: UserPremiumCache.Save
-    ): SubscriptionInteractor {
+        private val repository: SubscriptionRepository
+    ) : SubscriptionInteractor {
 
-        override fun subscribe(callback: () -> Unit) {
-            Thread {
-                Thread.sleep(1_000)
-                userPremiumCache.saveUserPremium()
-                callback.invoke()
-            }.start()
+        override suspend fun subscribe() {
+            delay(1000)
+            repository.subscribe()
         }
     }
 }

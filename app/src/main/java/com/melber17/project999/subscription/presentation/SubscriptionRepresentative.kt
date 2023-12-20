@@ -2,13 +2,21 @@ package com.melber17.project999.subscription.presentation
 
 import androidx.annotation.MainThread
 import com.melber17.project999.core.ClearRepresentative
+import com.melber17.project999.core.DispatchersList
 import com.melber17.project999.core.HandleDeath
 import com.melber17.project999.core.Representative
+import com.melber17.project999.core.RunAsync
 import com.melber17.project999.core.UiObserver
 import com.melber17.project999.dashboard.DashboardRepresentative
 import com.melber17.project999.dashboard.DashboardScreen
 import com.melber17.project999.main.Navigation
+import com.melber17.project999.main.Screen
 import com.melber17.project999.subscription.domain.SubscriptionInteractor
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 interface SubscriptionRepresentative : Representative<SubscriptionUiState>, SubscriptionInner,
     SubscriptionObserved,
@@ -19,16 +27,17 @@ interface SubscriptionRepresentative : Representative<SubscriptionUiState>, Subs
     fun subscribe()
 
 
-
     fun finish()
+    fun comeback()
 
     class Base(
         private val handleDeath: HandleDeath,
         private val observable: SubscriptionObservable,
         private val clear: ClearRepresentative,
         private val interactor: SubscriptionInteractor,
-        private val navigation: Navigation.Update
-    ) : SubscriptionRepresentative {
+        private val navigation: Navigation.Update,
+        private val runAsync: RunAsync
+    ) : Representative.Abstract<SubscriptionUiState>(runAsync), SubscriptionRepresentative {
         override fun init(restoreState: SaveAndRestoreSubscriptionUiState.Restore) {
             if (restoreState.isEmpty()) {
                 handleDeath.firstOpening()
@@ -42,14 +51,17 @@ interface SubscriptionRepresentative : Representative<SubscriptionUiState>, Subs
         }
 
 
-
         override fun subscribe() {
             observable.update(SubscriptionUiState.Loading)
             subscribeInner()
         }
 
-        override fun subscribeInner() = interactor.subscribe {
-            observable.update(SubscriptionUiState.Success)
+        override fun subscribeInner() {
+            handleAsync({
+                interactor.subscribe()
+            }) {
+                observable.update(SubscriptionUiState.Success)
+            }
         }
 
         override fun observed() = observable.clear()
@@ -59,8 +71,13 @@ interface SubscriptionRepresentative : Representative<SubscriptionUiState>, Subs
         }
 
         override fun finish() {
+            clear()
             clear.clear(SubscriptionRepresentative::class.java)
             navigation.update(DashboardScreen)
+        }
+
+        override fun comeback() {
+            finish()
         }
 
         override fun startGettingUpdates(callback: UiObserver<SubscriptionUiState>) {
@@ -75,7 +92,7 @@ interface SubscriptionRepresentative : Representative<SubscriptionUiState>, Subs
 
 }
 
-object EmptySubscriptionObserver: SubscriptionObserver {
+object EmptySubscriptionObserver : SubscriptionObserver {
     override fun update(data: SubscriptionUiState) = Unit
 }
 

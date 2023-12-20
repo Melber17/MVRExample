@@ -7,15 +7,13 @@ interface UiObservable<T : Any> : UiUpdate<T>, UpdateObserver<T> {
 
     fun clear()
 
-    abstract class Single<T : Any>(
+    abstract class Base<T : Any>(
         private val empty: T
     ) : UiObservable<T> {
 
 
-        @Volatile
         protected var cache: T = empty
 
-        @Volatile
         private var observer: UiObserver<T> = UiObserver.Empty()
 
 
@@ -23,14 +21,12 @@ interface UiObservable<T : Any> : UiUpdate<T>, UpdateObserver<T> {
             cache = empty
         }
 
-        @SuppressLint("SuspiciousIndentation")
-        @MainThread
         override fun updateObserver(uiObserver: UiObserver<T>) {
             observer = uiObserver
             observer.update(cache)
         }
 
-        override fun update(data: T) = synchronized(lock) {
+        override fun update(data: T) {
             cache = data
             observer.update(cache)
         }
