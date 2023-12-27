@@ -12,6 +12,7 @@ import com.melber17.project999.dashboard.DashboardScreen
 import com.melber17.project999.main.Navigation
 import com.melber17.project999.main.Screen
 import com.melber17.project999.subscription.domain.SubscriptionInteractor
+import com.melber17.project999.subscription.domain.SubscriptionResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -26,6 +27,8 @@ interface SubscriptionRepresentative : Representative<SubscriptionUiState>, Subs
     @MainThread
     fun subscribe()
 
+    suspend fun subscribeInternal()
+
 
     fun finish()
     fun comeback()
@@ -36,7 +39,8 @@ interface SubscriptionRepresentative : Representative<SubscriptionUiState>, Subs
         private val clear: ClearRepresentative,
         private val interactor: SubscriptionInteractor,
         private val navigation: Navigation.Update,
-        private val runAsync: RunAsync
+        private val mapper: SubscriptionResult.Mapper,
+        runAsync: RunAsync
     ) : Representative.Abstract<SubscriptionUiState>(runAsync), SubscriptionRepresentative {
         override fun init(restoreState: SaveAndRestoreSubscriptionUiState.Restore) {
             if (restoreState.isEmpty()) {
@@ -56,12 +60,16 @@ interface SubscriptionRepresentative : Representative<SubscriptionUiState>, Subs
             subscribeInner()
         }
 
-        override fun subscribeInner() {
-            handleAsync({
-                interactor.subscribe()
-            }) {
-                observable.update(SubscriptionUiState.Success)
-            }
+        override suspend fun subscribeInternal() = handleAsyncInternal({
+            interactor.subscribeInternal()
+        }) { result ->
+            result.map(mapper)
+        }
+
+        override fun subscribeInner() = handleAsync({
+            interactor.subscribe()
+        }) { result ->
+            result.map(mapper)
         }
 
         override fun observed() = observable.clear()

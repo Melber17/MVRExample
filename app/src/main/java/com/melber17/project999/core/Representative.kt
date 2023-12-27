@@ -26,6 +26,11 @@ interface Representative<T : Any> {
             runAsync.runAsync(coroutineScope, backgroundBlock, uiBlock)
         }
 
+        protected suspend fun <T: Any> handleAsyncInternal(
+            backgroundBlock: suspend () -> T,
+            uiBlock: (T) -> Unit
+        ) = runAsync.runAsync(backgroundBlock, uiBlock)
+
         protected fun clear() {
             runAsync.clear()
         }
@@ -36,6 +41,11 @@ interface Representative<T : Any> {
 interface RunAsync {
     fun <T : Any> runAsync(
         scope: CoroutineScope,
+        backgroundBlock: suspend () -> T,
+        uiBlock: (T) -> Unit
+    )
+
+    suspend fun <T : Any> runAsync(
         backgroundBlock: suspend () -> T,
         uiBlock: (T) -> Unit
     )
@@ -53,6 +63,15 @@ interface RunAsync {
         ) {
 
            job =  scope.launch(dispatchersList.background()) {
+                val result = backgroundBlock.invoke()
+                withContext(dispatchersList.ui()) {
+                    uiBlock.invoke(result)
+                }
+            }
+        }
+
+        override suspend fun <T : Any> runAsync(backgroundBlock: suspend () -> T, uiBlock: (T) -> Unit) {
+            withContext(dispatchersList.background()) {
                 val result = backgroundBlock.invoke()
                 withContext(dispatchersList.ui()) {
                     uiBlock.invoke(result)

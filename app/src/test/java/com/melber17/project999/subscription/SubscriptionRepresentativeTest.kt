@@ -9,6 +9,7 @@ import com.melber17.project999.dashboard.DashboardScreen
 import com.melber17.project999.main.Navigation
 import com.melber17.project999.main.Screen
 import com.melber17.project999.subscription.domain.SubscriptionInteractor
+import com.melber17.project999.subscription.domain.SubscriptionResult
 import com.melber17.project999.subscription.presentation.EmptySubscriptionObserver
 import com.melber17.project999.subscription.presentation.SaveAndRestoreSubscriptionUiState
 import com.melber17.project999.subscription.presentation.SubscriptionObservable
@@ -46,6 +47,7 @@ class SubscriptionRepresentativeTest {
             clear,
             interactor,
             navigation,
+            FakeMapper(observable),
             runAsync,
         )
 
@@ -251,10 +253,14 @@ private interface FakeInteractor : SubscriptionInteractor {
             assertEquals(times, subscribeCalledCount)
         }
 
-        override suspend fun subscribe() {
+        override suspend fun subscribe(): SubscriptionResult {
             subscribeCalledCount++
+            return SubscriptionResult.NoDataYet
         }
 
+        override suspend fun subscribeInternal(): SubscriptionResult {
+            return SubscriptionResult.Success
+        }
     }
 }
 
@@ -274,6 +280,13 @@ private interface FakeRunAsync : RunAsync {
         ) = runBlocking {
             cached = backgroundBlock.invoke()
             cachedBlock = uiBlock as (Any) -> Unit
+        }
+
+        override suspend fun <T : Any> runAsync(
+            backgroundBlock: suspend () -> T,
+            uiBlock: (T) -> Unit
+        ) {
+            uiBlock.invoke(backgroundBlock.invoke())
         }
 
         override fun clear() = Unit
@@ -378,4 +391,8 @@ private interface FakeHandleDeath : HandleDeath {
         }
     }
 
+}
+
+private class FakeMapper(private val observable: FakeObservable): SubscriptionResult.Mapper {
+    override fun mapSuccess() = observable.update(SubscriptionUiState.Success)
 }

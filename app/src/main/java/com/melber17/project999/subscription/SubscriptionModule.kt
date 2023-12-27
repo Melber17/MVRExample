@@ -8,10 +8,12 @@ import com.melber17.project999.core.Module
 import com.melber17.project999.core.RunAsync
 import com.melber17.project999.main.UserPremiumCache
 import com.melber17.project999.subscription.data.BaseSubscriptionRepository
+import com.melber17.project999.subscription.data.ForegroundServiceWrapper
 import com.melber17.project999.subscription.data.SubscriptionCloudDataSource
 import com.melber17.project999.subscription.domain.SubscriptionInteractor
 import com.melber17.project999.subscription.presentation.SubscriptionObservable
 import com.melber17.project999.subscription.presentation.SubscriptionRepresentative
+import com.melber17.project999.subscription.presentation.SubscriptionUiMapper
 
 class SubscriptionModule(
     private val core: Core,
@@ -19,18 +21,21 @@ class SubscriptionModule(
 ) : Module<SubscriptionRepresentative> {
 
     override fun representative(): SubscriptionRepresentative {
+        val observable = SubscriptionObservable.Base()
         return SubscriptionRepresentative.Base(
             HandleDeath.Base(),
-            SubscriptionObservable.Base(),
+            observable,
             clear,
             SubscriptionInteractor.Base(
                 BaseSubscriptionRepository(
+                    ForegroundServiceWrapper.Base(core.workManager()),
                     UserPremiumCache.Base(core.sharedPreferences()),
-                    SubscriptionCloudDataSource.Base()
+                    SubscriptionCloudDataSource.Base(),
                 )
             ),
             core.navigation(),
-            core.runAsync()
+            SubscriptionUiMapper(observable),
+            core.runAsync(),
         )
     }
 }

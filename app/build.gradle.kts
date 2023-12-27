@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace = "com.melber17.project999"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.melber17.project999"
         minSdk = 24
-        targetSdk = 33
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -36,7 +36,7 @@ android {
 }
 
 dependencies {
-
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
     implementation("androidx.core:core-ktx:1.9.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.8.0")
