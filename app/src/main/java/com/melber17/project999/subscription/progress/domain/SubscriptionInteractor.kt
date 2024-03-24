@@ -1,4 +1,4 @@
-package com.melber17.project999.subscription.domain
+package com.melber17.project999.subscription.progress.domain
 
 interface SubscriptionInteractor {
     suspend fun subscribe(): SubscriptionResult

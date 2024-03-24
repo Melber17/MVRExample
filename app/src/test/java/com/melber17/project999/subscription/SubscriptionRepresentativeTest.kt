@@ -8,14 +8,14 @@ import com.melber17.project999.core.UiObserver
 import com.melber17.project999.dashboard.DashboardScreen
 import com.melber17.project999.main.Navigation
 import com.melber17.project999.main.Screen
-import com.melber17.project999.subscription.domain.SubscriptionInteractor
-import com.melber17.project999.subscription.domain.SubscriptionResult
-import com.melber17.project999.subscription.presentation.EmptySubscriptionObserver
-import com.melber17.project999.subscription.presentation.SaveAndRestoreSubscriptionUiState
-import com.melber17.project999.subscription.presentation.SubscriptionObservable
-import com.melber17.project999.subscription.presentation.SubscriptionObserver
-import com.melber17.project999.subscription.presentation.SubscriptionRepresentative
-import com.melber17.project999.subscription.presentation.SubscriptionUiState
+import com.melber17.project999.subscription.progress.domain.SubscriptionInteractor
+import com.melber17.project999.subscription.progress.domain.SubscriptionResult
+import com.melber17.project999.subscription.screen.presentation.EmptySubscriptionObserver
+import com.melber17.project999.subscription.screen.presentation.SaveAndRestoreSubscriptionUiState
+import com.melber17.project999.subscription.screen.presentation.SubscriptionObservable
+import com.melber17.project999.subscription.screen.presentation.SubscriptionObserver
+import com.melber17.project999.subscription.screen.presentation.SubscriptionRepresentative
+import com.melber17.project999.subscription.screen.presentation.SubscriptionUiState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
@@ -243,7 +243,7 @@ private interface FakeNavigation : Navigation.Update {
 }
 
 
-private interface FakeInteractor : SubscriptionInteractor {
+internal interface FakeInteractor : SubscriptionInteractor {
     fun checkSubscribeCalledTimes(times: Int)
 
 
@@ -264,7 +264,7 @@ private interface FakeInteractor : SubscriptionInteractor {
     }
 }
 
-private interface FakeRunAsync : RunAsync {
+internal interface FakeRunAsync : RunAsync {
     fun pingResult()
     class Base : FakeRunAsync {
         private var cachedBlock: (Any) -> Unit = {}
@@ -367,7 +367,7 @@ private interface FakeObservable : SubscriptionObservable {
     }
 }
 
-private interface FakeHandleDeath : HandleDeath {
+internal interface FakeHandleDeath : HandleDeath {
     fun checkFirstOpening(times: Int)
 
     class Base() : FakeHandleDeath {

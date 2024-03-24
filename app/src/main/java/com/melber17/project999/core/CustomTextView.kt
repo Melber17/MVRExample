@@ -12,7 +12,7 @@ class CustomTextView: androidx.appcompat.widget.AppCompatTextView, HideAndShow {
 
     override fun onSaveInstanceState(): Parcelable? = super.onSaveInstanceState()?.let {
         val visibilityState = VisibilityState(it)
-        visibilityState.visible = visibility
+        visibilityState.save(this)
         return visibilityState
     }
 
@@ -20,7 +20,7 @@ class CustomTextView: androidx.appcompat.widget.AppCompatTextView, HideAndShow {
         val visibilityState = state as VisibilityState?
         super.onRestoreInstanceState(visibilityState?.superState)
         visibilityState?.let {
-            visibility = it.visible
+            it.restore(this)
         }
     }
 

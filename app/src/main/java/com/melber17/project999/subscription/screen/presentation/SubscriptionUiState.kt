@@ -1,21 +1,21 @@
-package com.melber17.project999.subscription.presentation
+package com.melber17.project999.subscription.screen.presentation
 
 import com.melber17.project999.core.HideAndShow
+import com.melber17.project999.subscription.progress.presentation.Subscribe
 import java.io.Serializable
 
 interface SubscriptionUiState : Serializable {
-    fun show(subscribeButton: HideAndShow, progressBar: HideAndShow, finishButton: HideAndShow)
+    fun show(subscribeButton: HideAndShow, progressBar: Subscribe, finishButton: HideAndShow)
 
     fun observed(representative: SubscriptionObserved) = representative.observed()
-    fun restoreAfterDeath(representative: SubscriptionInner, observable: SubscriptionObservable) = observable.update(this)
+    fun restoreAfterDeath(observable: SubscriptionObservable) = observable.update(this)
     object Initial : SubscriptionUiState {
         override fun show(
             subscribeButton: HideAndShow,
-            progressBar: HideAndShow,
+            progressBar: Subscribe,
             finishButton: HideAndShow
         ) {
             subscribeButton.show()
-            progressBar.hide()
             finishButton.hide()
         }
     }
@@ -23,32 +23,23 @@ interface SubscriptionUiState : Serializable {
     object Loading : SubscriptionUiState {
         override fun show(
             subscribeButton: HideAndShow,
-            progressBar: HideAndShow,
+            progressBar: Subscribe,
             finishButton: HideAndShow
         ) {
             subscribeButton.hide()
-            progressBar.show()
+            progressBar.subscribe()
             finishButton.hide()
         }
 
-        override fun restoreAfterDeath(
-            representative: SubscriptionInner,
-            observable: SubscriptionObservable
-        ) {
-            representative.subscribeInner()
-        }
-
-        override fun observed(representative: SubscriptionObserved) = Unit
     }
 
     object Success : SubscriptionUiState {
         override fun show(
             subscribeButton: HideAndShow,
-            progressBar: HideAndShow,
+            progressBar: Subscribe,
             finishButton: HideAndShow
         ) {
             subscribeButton.hide()
-            progressBar.hide()
             finishButton.show()
         }
     }
@@ -56,12 +47,11 @@ interface SubscriptionUiState : Serializable {
     object Empty : SubscriptionUiState {
         override fun show(
             subscribeButton: HideAndShow,
-            progressBar: HideAndShow,
+            progressBar: Subscribe,
             finishButton: HideAndShow
         ) = Unit
 
         override fun restoreAfterDeath(
-            representative: SubscriptionInner,
             observable: SubscriptionObservable
         ) = Unit
     }

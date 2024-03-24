@@ -1,4 +1,4 @@
-package com.melber17.project999.subscription.presentation
+package com.melber17.project999.subscription.screen.presentation
 
 import com.melber17.project999.main.Screen
 

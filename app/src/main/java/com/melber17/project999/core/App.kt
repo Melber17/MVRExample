@@ -8,10 +8,14 @@ class App : Application(), ProvideRepresentative, ClearRepresentative {
 
     override fun onCreate() {
         super.onCreate()
-        factory = ProvideRepresentative.Factory(ProvideRepresentative.CreateDependency(Core.Base(this), this))
+        val core = Core.Base(this)
+        factory = ProvideRepresentative.Factory(
+            core, this
+        )
     }
 
-    override fun <T : Representative<*>> provideRepresentative(clasz: Class<T>): T = factory.provideRepresentative(clasz)
+    override fun <T : Representative<*>> provideRepresentative(clasz: Class<T>): T =
+        factory.provideRepresentative(clasz)
 
     override fun clear(clasz: Class<out Representative<*>>) {
         factory.clear(clasz)

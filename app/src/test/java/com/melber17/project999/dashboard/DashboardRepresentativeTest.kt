@@ -5,7 +5,7 @@ import com.melber17.project999.core.Representative
 import com.melber17.project999.core.UiObserver
 import com.melber17.project999.main.Navigation
 import com.melber17.project999.main.Screen
-import com.melber17.project999.subscription.presentation.SubscriptionScreen
+import com.melber17.project999.subscription.screen.presentation.SubscriptionScreen
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test

@@ -6,14 +6,19 @@ import android.os.Parcelable
 import android.util.AttributeSet
 import android.view.View
 
-class CustomButton: androidx.appcompat.widget.AppCompatButton, HideAndShow {
-    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
+class CustomButton : androidx.appcompat.widget.AppCompatButton, HideAndShow {
+    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(
+        context,
+        attrs,
+        defStyleAttr
+    )
+
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
     constructor(context: Context) : super(context)
 
     override fun onSaveInstanceState(): Parcelable? = super.onSaveInstanceState()?.let {
         val visibilityState = VisibilityState(it)
-        visibilityState.visible = visibility
+        visibilityState.save(this)
         return visibilityState
     }
 
@@ -21,7 +26,7 @@ class CustomButton: androidx.appcompat.widget.AppCompatButton, HideAndShow {
         val visibilityState = state as VisibilityState?
         super.onRestoreInstanceState(visibilityState?.superState)
         visibilityState?.let {
-            visibility = it.visible
+            it.restore(this)
         }
     }
 
@@ -35,11 +40,20 @@ class CustomButton: androidx.appcompat.widget.AppCompatButton, HideAndShow {
 }
 
 
-class VisibilityState: View.BaseSavedState {
-    var visible: Int = View.VISIBLE
-    constructor(superState: Parcelable): super(superState)
+class VisibilityState : View.BaseSavedState {
+    private var visible: Int = View.VISIBLE
 
-    private constructor(parcelIn: Parcel): super(parcelIn) {
+    fun save(view: View) {
+        visible = view.visibility
+    }
+
+    fun restore(view: View) {
+        view.visibility = visible
+    }
+
+    constructor(superState: Parcelable) : super(superState)
+
+    private constructor(parcelIn: Parcel) : super(parcelIn) {
         visible = parcelIn.readInt()
     }
 
@@ -50,7 +64,7 @@ class VisibilityState: View.BaseSavedState {
 
     override fun describeContents(): Int = 0
 
-    companion object CREATOR: Parcelable.Creator<VisibilityState> {
+    companion object CREATOR : Parcelable.Creator<VisibilityState> {
         override fun createFromParcel(parcel: Parcel): VisibilityState = VisibilityState(parcel)
         override fun newArray(size: Int): Array<VisibilityState?> = arrayOfNulls(size)
 

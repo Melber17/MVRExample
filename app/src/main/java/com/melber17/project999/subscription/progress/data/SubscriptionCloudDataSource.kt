@@ -1,4 +1,4 @@
-package com.melber17.project999.subscription.data
+package com.melber17.project999.subscription.progress.data
 
 import kotlinx.coroutines.delay
 

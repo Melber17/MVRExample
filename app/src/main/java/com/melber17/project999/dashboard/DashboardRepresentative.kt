@@ -4,7 +4,7 @@ import com.melber17.project999.core.ClearRepresentative
 import com.melber17.project999.core.Representative
 import com.melber17.project999.core.UiObserver
 import com.melber17.project999.main.Navigation
-import com.melber17.project999.subscription.presentation.SubscriptionScreen
+import com.melber17.project999.subscription.screen.presentation.SubscriptionScreen
 
 interface DashboardRepresentative : Representative<PremiumDashboardUiState> {
     fun play()

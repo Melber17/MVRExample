@@ -1,4 +1,4 @@
-package com.melber17.project999.subscription.data
+package com.melber17.project999.subscription.progress.data
 
 import android.content.Context
 import androidx.work.CoroutineWorker
@@ -7,7 +7,8 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.melber17.project999.core.ProvideRepresentative
-import com.melber17.project999.subscription.presentation.SubscriptionRepresentative
+import com.melber17.project999.subscription.progress.presentation.SubscriptionProgressRepresentative
+import com.melber17.project999.subscription.screen.presentation.SubscriptionRepresentative
 
 interface ForegroundServiceWrapper {
     fun start()
@@ -30,7 +31,7 @@ private const val WORK_NAME = "load data"
 class Worker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
         val representative = (applicationContext as ProvideRepresentative).provideRepresentative(
-            SubscriptionRepresentative::class.java
+            SubscriptionProgressRepresentative::class.java
         )
 
         representative.subscribeInternal()

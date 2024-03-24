@@ -1,7 +1,7 @@
-package com.melber17.project999.subscription.data
+package com.melber17.project999.subscription.progress.data
 
 import com.melber17.project999.main.UserPremiumCache
-import com.melber17.project999.subscription.domain.SubscriptionRepository
+import com.melber17.project999.subscription.progress.domain.SubscriptionRepository
 
 class BaseSubscriptionRepository(
     private val foregroundServiceWrapper: ForegroundServiceWrapper,
